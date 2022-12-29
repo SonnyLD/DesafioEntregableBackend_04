@@ -51,9 +51,9 @@ export default class ProductManager {
     return this.getProducts.find((products) => products.id === idProducto);
   }
    
-  updateProduct(title, data) {
+  updateProduct(id, data) {
     for(let products of this.getProducts){
-     if(products.title === title){
+     if(products.id === id){
       products = Object.assign(products, data);
       fs.promises.writeFile('getProducts.json',JSON.stringify(this.getProducts));
       return products;

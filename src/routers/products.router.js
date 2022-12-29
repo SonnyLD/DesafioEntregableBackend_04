@@ -16,16 +16,24 @@ productsRouter.get('/', (req, res) => {
 
 productsRouter.post('/', (req, res) => {
     productManager.getProducts.push(req.body) 
+
+    const productsList = productManager.getProducts;
+        req.io.emit('listChange', productsList);
+
     res.status(201).json(productManager.getProducts);
 
 })
 
-productsRouter.put('/:title',(req, res) => {
+productsRouter.put('/:pid',(req, res) => {
   try {
-    const { title } = req.params;
+    const { id } = req.params;
     const { body } = req;
-    const newProduct = productManager.updateProduct(title, body);
+    const newProduct = productManager.updateProduct(id, body);
     console.log(newProduct);
+
+    const productsList = productManager.getProducts;
+        req.io.emit('listChange', productsList);
+
     res.json(newProduct);
   } catch (error) {
     res.status(400).send(error);
@@ -35,6 +43,10 @@ productsRouter.put('/:title',(req, res) => {
 productsRouter.delete('/:id', (req, res) => {
   let products = productManager.deleteProduct(item => item.id === req.query.id);
  productManager.deleteProduct(products, 1);
+
+ const productsList = productManager.getProducts;
+        req.io.emit('listChange', productsList);
+
  res.sendStatus(200);
 });
 
