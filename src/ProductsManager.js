@@ -5,7 +5,7 @@ export default class ProductManager {
     constructor() {
         this.getProducts = [];
     }
-    async addProducts(title, description, price, thumbnail, stock) {
+    async addProducts(title, description, price, thumbnail, stock, code, category, status = true) {
       try{
        const products ={
         id: this.#getMaxId() + 1,
@@ -13,8 +13,10 @@ export default class ProductManager {
         description,
         price,
         thumbnail,
-        code: [],
         stock,
+        code,
+        category,
+        status,
     };
     this.getProducts.push(products);
     if(fs.existsSync('getProducts.json')){
@@ -31,30 +33,32 @@ export default class ProductManager {
       throw new Error(error);
     }
   } 
-  getProductById(idProducto) { 
-    const products = this.#getProducts(idProducto);
-    if (products) {
-      if (!products.includes(idProducto)) products.push(idProducto);
-      console.log(this.getProducts);
-    } else {  
-       console.log("El producto existe");
+  getProductById(id) { 
+    if (isNaN(id)) {
+      throw new Error('id is not valid, must be a number');
     }
-  }
+    let product = this.#getProducts.find(product => product.id == id);
+    if (!product){
+        throw new Error ("El producto no existe");
+    } 
+    return product;
+}
+   
   #getMaxId() {
     let maxId = 0;
-    this.getProducts.map((products) => {
+    this.getProducts.forEach((products) => {
       if (products.id > maxId) maxId = products.id
     });
     return maxId;
   }
-  #getProducts(idProducto) {
-    return this.getProducts.find((products) => products.id === idProducto);
+  #getProducts() {
+    return this.getProducts;
   }
    
-  updateProduct(id, data) {
+  updateProduct(id) {
     for(let products of this.getProducts){
      if(products.id === id){
-      products = Object.assign(products, data);
+      products = Object.assign(products);
       fs.promises.writeFile('getProducts.json',JSON.stringify(this.getProducts));
       return products;
      }  
@@ -62,10 +66,10 @@ export default class ProductManager {
   }
   
   
-  deleteProduct(id, data){
+  deleteProduct(id){
     for(let products of this.getProducts){
       if(products.id === id){
-       products = Object.assign(products, data);
+       products = Object.assign(products);
        fs.promises.writeFile('getProducts.json',JSON.stringify(this.getProducts));
        return products;
       }  

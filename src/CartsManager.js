@@ -1,52 +1,68 @@
 import fs from 'fs';
+import { Carts } from './Carts.js';
 
- class CartsManager {
-    constructor() {
-        this.getCarts = [];
+export class CartsManager {
+    #carts = [];
+
+    #lastId = 1;
+
+    static #defaultPath = './src/carts.json'; 
+
+
+    constructor(path) {
+        this.path = path ?? CartsManager.#defaultPath;
+        this.getCartsFile();
     }
-    async addCarts(title) {
-      try{
-       const carts ={
-        id: this.#getMaxId() + 1,
-        title,
-        
-    };
-    this.getCarts.push(carts);
-    if(fs.existsSync('getCarts.json')){
-      const getCarts = JSON.parse(await fs.promises.readFile('getCarts.json','utf8'));
-      this.getCarts = getCarts;
-      this.getCarts.push(carts);
-    } else{
-      this.getCarts.push(carts);
-      fs.promises.writeFile('getCarts.json',JSON.stringify(this.getCarts))
+
+    createCart(products = []) {
+        let carts = new Carts(products);
+        carts.setId(this.#lastId++);
+        this.#carts.push(carts);
+        this.saveCartsFile();
     }
-  
-    }catch (error) {
-      console.log(error);
-      throw new Error(error);
+
+    getCartById(cartId) {
+        if (isNaN(cartId)) {
+            throw new Error('id is not valid, must be a number');
+        }
+        let cart = this.#carts.find(cart => cart.id == cartId);
+        if (!cart){
+            throw new Error ("Cart not found");
+        } 
+        return cart;
     }
-  } 
-  getProductById(idProducto) { 
-    const carts = this.#getCarts(idProducto);
-    if (carts) {
-      if (!carts.includes(idProducto)) carts.push(idProducto);
-      console.log(this.getCarts);
-    } else {  
-       console.log("El producto existe");
+
+    addProductToCart(cartId, productId) { //PENDIENTE: VALIDAR ID DE PRODUCTO
+        const cart = this.getCartById(cartId);
+        const productExists = cart.products.find(product => product.id == productId);
+        if (productExists) {
+            productExists.quantity++; //Agrega de 1 en 1.
+        } else {
+            const product = {
+                id: productId,
+                quantity: 1,
+            }
+            cart.products.push(product);
+        }
+        this.saveCartsFile();
     }
-  }
-  #getMaxId() {
-    let maxId = 0;
-    this.getCarts.map((carts) => {
-      if (carts.id > maxId) maxId = carts.id
-    });
-    
-    return maxId;
-    
-  }
-  #getCarts(idProducto) {
-    return this.getCarts.find((carts) => carts.id === idProducto);
-  }
-   
-  }
-  export default CartsManager;
+
+    saveCartsFile() {
+        fs.writeFileSync(this.path, JSON.stringify(this.#carts));
+    }
+
+    setCarts() {
+        let carts = JSON.parse(fs.readFileSync(this.path, 'utf-8'));
+        this.#carts = [...carts];
+        this.#lastId = this.#carts.length? this.#carts.length : 1;
+    }
+
+    getCartsFile() {
+        if (!fs.existsSync(this.path)) {
+            fs.writeFileSync(this.path, JSON.stringify(this.#carts));
+            return;
+        } else {
+            this.setCarts();
+        }
+    }
+}

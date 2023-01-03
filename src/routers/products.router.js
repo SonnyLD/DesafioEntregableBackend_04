@@ -9,44 +9,75 @@ export const productManager = new ProductManager();
 productManager.addProducts("Producto 1 Mesa de comedor", "mesa de madera", 1400, "Sin imagen", 60);
 productManager.addProducts("Producto 2 Sofa de sala", "Producto de sala", 1000, "Sin imagen", 100);
 productManager.addProducts("Producto 3 silla", "silla de cocina", 230, "Sin imagen", 200);
+productManager.addProducts("Producto 4 producto 4", "Producto de sala", 1000, "Sin imagen", 100);
 
 productsRouter.get('/', (req, res) => {
-    res.json(productManager.getProducts)
+    try {
+      const { limit } = req.query;
+      if (!limit) {
+          const products = productManager.getProducts;
+          res.status(200).json(products);
+      } else {
+          const productsQuery = productManager.getProducts.slice(0, limit);
+          res.status(200).json(productsQuery);
+      }
+  } catch (error) {
+      res.status(404).json({ error: error.message });
+  }
 })
 
-productsRouter.post('/', (req, res) => {
-    productManager.getProducts.push(req.body) 
 
+productsRouter.post('/', (req, res) => {
+  try {
+    productManager.getProducts.push(req.body);
+    
+    //emit de websocket en post
     const productsList = productManager.getProducts;
-        req.io.emit('listChange', productsList);
+    req.io.emit('listChange', productsList);
 
     res.status(201).json(productManager.getProducts);
+} catch (error) {
+    res.status(501).json({ error: error.message });
+}
+});
 
+productsRouter.get('/:pid', (req, res) => {
+  try {
+      const { pid } = req.params;
+      const product = productManager.getProductById(pid);
+      res.status(200).json(product);
+  } catch (error) {
+      res.status(404).json({ error: error.message });
+  }
 })
 
 productsRouter.put('/:pid',(req, res) => {
   try {
-    const { id } = req.params;
-    const { body } = req;
-    const newProduct = productManager.updateProduct(id, body);
-    console.log(newProduct);
+      const { pid } = req.params;
+      productManager.getProducts.push(req.body);
+      productManager.updateProduct(Number(pid), title, description, price, thumbnail, stock, code, category, status );
+    console.log(req);
 
     const productsList = productManager.getProducts;
         req.io.emit('listChange', productsList);
 
-    res.json(newProduct);
+    res.status(200).json(productManager.getProducts);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(501).json({ error: error.message });
   }
 });
 
-productsRouter.delete('/:id', (req, res) => {
-  let products = productManager.deleteProduct(item => item.id === req.query.id);
- productManager.deleteProduct(products, 1);
+productsRouter.delete('/:pid', (req, res) => {
+  try {
+    const { pid } = req.params;
+    productManager.deleteProduct(pid);
 
  const productsList = productManager.getProducts;
         req.io.emit('listChange', productsList);
 
- res.sendStatus(200);
+        res.status(200).json({ message: 'Producto borrado' });
+      } catch (error) {
+          res.status(501).json({ error: error.message });
+      }
 });
 

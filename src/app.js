@@ -7,6 +7,8 @@ import { Server } from 'socket.io';
 
 const app = express();
 
+const PORT = 8080;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('src/public'));
@@ -24,7 +26,7 @@ app.use('/api/products',productsRouter);
 app.use('/api/carts',cartsRouter);
 app.use("/", viewsRouter);
 
-const PORT=process.env.PORT || 8080; 
+
 const server = app.listen(PORT, () => {
 console.log(`🚀 Server started on port http://localhost:${PORT}`)
 });
