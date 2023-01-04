@@ -37,7 +37,7 @@ export default class ProductManager {
     if (isNaN(id)) {
       throw new Error('id is not valid, must be a number');
     }
-    let product = this.#getProducts.find(product => product.id == id);
+    let product = this.getProducts.find(product => product.id == id);
     if (!product){
         throw new Error ("El producto no existe");
     } 
