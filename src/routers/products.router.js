@@ -6,10 +6,6 @@ import ProductManager from "../ProductsManager.js";
 export const productsRouter = Router();
 
 export const productManager = new ProductManager();
-productManager.addProducts("Producto 1 Mesa de comedor", "mesa de madera", 1400, "Sin imagen", 60);
-productManager.addProducts("Producto 2 Sofa de sala", "Producto de sala", 1000, "Sin imagen", 100);
-productManager.addProducts("Producto 3 silla", "silla de cocina", 230, "Sin imagen", 200);
-productManager.addProducts("Producto 4 producto 4", "Producto de sala", 1000, "Sin imagen", 100);
 
 productsRouter.get('/', (req, res) => {
     try {
@@ -49,19 +45,22 @@ productsRouter.get('/:pid', (req, res) => {
   } catch (error) {
       res.status(404).json({ error: error.message });
   }
-})
+}) 
 
 productsRouter.put('/:pid',(req, res) => {
   try {
+    
       const { pid } = req.params;
-      productManager.getProducts.push(req.body);
-      productManager.updateProduct(Number(pid), title, description, price, thumbnail, stock, code, category, status );
+      const { title, description, price, thumbnail, stock, code, category, status } = req.body;
+      const products = new ProductManager(title, description, price, thumbnail, stock, code, category, status);
+      
+      productManager.updateProductById(Number(pid), products);
     console.log(req);
 
     const productsList = productManager.getProducts;
         req.io.emit('listChange', productsList);
 
-    res.status(200).json(productManager.getProducts);
+    res.status(200).json(products);
   } catch (error) {
     res.status(501).json({ error: error.message });
   }
@@ -80,4 +79,3 @@ productsRouter.delete('/:pid', (req, res) => {
           res.status(501).json({ error: error.message });
       }
 });
-
