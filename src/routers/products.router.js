@@ -6,6 +6,7 @@ import ProductManager from "../ProductsManager.js";
 export const productsRouter = Router();
 
 export const productManager = new ProductManager();
+productManager.addProducts("Producto prueba4","Este es un producto prueba4",200,"Sin imagen",24,"PRUEBAX444","PRUEBA","status", true)
 
 productsRouter.get('/', (req, res) => {
     try {
