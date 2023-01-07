@@ -1,21 +1,20 @@
 import { Router } from "express";
-
 import ProductManager from "../ProductsManager.js";
-
+import Product from "../Products.js";
 
 export const productsRouter = Router();
 
 export const productManager = new ProductManager();
-productManager.addProducts("Producto prueba4","Este es un producto prueba4",200,"Sin imagen",24,"PRUEBAX444","PRUEBA","status", true)
+
 
 productsRouter.get('/', (req, res) => {
     try {
       const { limit } = req.query;
       if (!limit) {
-          const products = productManager.getProducts;
+          const products = productManager.getProduct();
           res.status(200).json(products);
       } else {
-          const productsQuery = productManager.getProducts.slice(0, limit);
+          const productsQuery = productManager.getProduct.slice(0, limit);
           res.status(200).json(productsQuery);
       }
   } catch (error) {
@@ -26,13 +25,14 @@ productsRouter.get('/', (req, res) => {
 
 productsRouter.post('/', (req, res) => {
   try {
-    productManager.getProducts.push(req.body);
-    
+      const { title, description, price, thumbnail, stock, code, category, status } = req.body;
+      const products = new Product(title, description, price, thumbnail, stock, code, category, status);
+      productManager.addProduct(products);
     //emit de websocket en post
-    const productsList = productManager.getProducts;
+    const productsList = productManager.getProduct();
     req.io.emit('listChange', productsList);
 
-    res.status(201).json(productManager.getProducts);
+    res.status(201).json(products);
 } catch (error) {
     res.status(501).json({ error: error.message });
 }
@@ -53,12 +53,12 @@ productsRouter.put('/:pid',(req, res) => {
     
       const { pid } = req.params;
       const { title, description, price, thumbnail, stock, code, category, status } = req.body;
-      const products = new ProductManager(title, description, price, thumbnail, stock, code, category, status);
+      const products = new Product(title, description, price, thumbnail, stock, code, category, status);
       
       productManager.updateProductById(Number(pid), products);
     console.log(req);
 
-    const productsList = productManager.getProducts;
+    const productsList = productManager.getProduct();
         req.io.emit('listChange', productsList);
 
     res.status(200).json(products);
@@ -72,7 +72,7 @@ productsRouter.delete('/:pid', (req, res) => {
     const { pid } = req.params;
     productManager.deleteProduct(pid);
 
- const productsList = productManager.getProducts;
+ const productsList = productManager.getProduct();
         req.io.emit('listChange', productsList);
 
         res.status(200).json({ message: 'Producto borrado' });

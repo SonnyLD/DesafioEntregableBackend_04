@@ -1,89 +1,107 @@
 import fs from 'fs';
 
-
 export default class ProductManager {
-    constructor(title, description, price, thumbnail, stock, code, category, status = true) {
-        this.getProducts = [];
+    #products = [];
+
+    #maxId = 0;
+
+    static #defaultPath = './src/products.json'; 
+    // La ruta es relativa a la carpeta donde se corra node/nodemon. 
+    // Si se ejecuta desde src funciona con la ruta './products.json', si se ejecuta desde la carpeta base es necesario usar './src/products.json'
+    // Se sugiere correr script 'npm run dev' para evitar problemas con la ruta
+
+    constructor(path) {
+        this.path = path ?? ProductManager.#defaultPath;
+        this.getProductsFile();
     }
-    async addProducts(title, description, price, thumbnail, stock, code, category, status = true) {
-      try{
-       const products ={
-        id: this.#getMaxId() + 1,
-        title,
-        description,
-        price,
-        thumbnail,
-        stock,
-        code,
-        category,
-        status,
-    };
-    this.getProducts.push(products);
-    if(fs.existsSync('getProducts.json')){
-      const getProducts = JSON.parse(await fs.promises.readFile('getProducts.json','utf8'));
-      this.getProducts = getProducts;
-      this.getProducts.push(products);
-    } else{
-      this.getProducts.push(products);
-      fs.promises.writeFile('getProducts.json',JSON.stringify(this.getProducts))
+
+    getProductByCode(code) {
+        if (typeof code !== 'string' || code.length === 0) {
+            throw new Error('Code is not valid');
+        }
+        let product = this.#products.find(product => product.code === code);
+        if (!product){
+            throw new Error ("Product not found");
+        } 
+        return product;
     }
-  
-    }catch (error) {
-      console.log(error);
-      throw new Error(error);
+
+    getProductById(id) {
+        if (isNaN(id)) {
+            throw new Error('id is not valid, must be a number');
+        }
+        let product = this.#products.find(product => product.id == id);
+        if (!product){
+            throw new Error ("Product not found");
+        } 
+        return product;
     }
-  } 
-  getProductById(id) { 
-    if (isNaN(id)) {
-      throw new Error('id is not valid, must be a number');
+
+    alreadyExists(code) {
+        let product = this.#products.find(product => product.code == code);
+        return product ? true : false;
     }
-    let product = this.getProducts.find(product => product.id == id);
-    if (!product){
-        throw new Error ("El producto no existe");
+    
+    addProduct(product) {
+        if (!this.alreadyExists(product.code)) {
+            product.setId(++this.#maxId);
+            this.#products.push(product);
+            this.saveProductsFile();
+        } else {
+            throw new Error ("Product's code already exists");	
+        }
     } 
-    return product;
-} 
-   
-alreadyExists(code) {
-  let product = this.getProducts.find(product => product.code == code.trim().toUpperCase());
-  return product ? true : false;
-}
+    
+    getProduct() {
+        return this.#products;
+    }
 
-  #getMaxId() {
-    let maxId = 0;
-    this.getProducts.forEach((products) => {
-      if (products.id > maxId) maxId = products.id
-    });
-    return maxId;
-  }
-  getProduct() {
-    return this.getProducts;
-  }
-   
-  updateProductById(id, updatedProduct) {
-    const indexToUpdate = this.getProducts.findIndex(product => product.id == id);
-    if (indexToUpdate === -1) {
-        throw new Error ("Product not found");
-    } else {
-        this.getProducts[indexToUpdate] = {...updatedProduct, id: id};
-        this.saveProductsFile();
+    updateProductById(id, updatedProduct) {
+        const indexToUpdate = this.#products.findIndex(product => product.id == id);
+        if (indexToUpdate === -1) {
+            throw new Error ("Product not found");
+        } else {
+            this.#products[indexToUpdate] = {...updatedProduct, id: id};
+            this.saveProductsFile();
+        }
+    }
+
+    deleteProductById(id) {
+        let product = this.#products.find(product => product.id == id);
+        if (!product) {
+            throw new Error ("Product not found");
+        } else {
+            this.#products.splice(this.#products.indexOf(product), 1);
+            this.saveProductsFile();
+        }
+    }
+
+    saveProductsFile() {
+        fs.writeFileSync(this.path, JSON.stringify(this.#products));
+    }
+
+    setProducts() {
+        let products = JSON.parse(fs.readFileSync(this.path, 'utf-8'));
+        this.#products = [...products];
+        this.getMaxId();
+    }
+
+    getMaxId() {
+        let maxId = 0;
+        this.#products.forEach(product => {
+            if (product.id > maxId) {
+                maxId = product.id;
+            }
+        });
+        this.#maxId = maxId;
+    }
+
+    getProductsFile() {
+        if (!fs.existsSync(this.path)) {
+            fs.writeFileSync(this.path, JSON.stringify(this.#products));
+            return;
+        } else {
+            this.setProducts();
+        }
     }
 }
-  
-deleteProduct(id) {
-  let product = this.getProducts.find(product => product.id == id);
-  if (!product) {
-      throw new Error ("Product not found");
-  } else {
-      this.getProducts.splice(this.getProducts.indexOf(product), 1);
-      this.saveProductsFile();
-  }
-}
-
-saveProductsFile() {
-  fs.writeFileSync('getProducts.json', JSON.stringify(this.getProducts));
-}
-
-  
-  }
- 
