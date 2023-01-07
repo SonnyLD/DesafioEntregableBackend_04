@@ -18,7 +18,7 @@ app.set('view engine', 'handlebars');
 app.set('views', 'src/views');
 
 
-app.use((req, res, next) => { //https://aaryanadil.com/pass-socket-io-to-express-routes-in-files/ Es la mejor opción?
+app.use((req, _res, next) => { //https://aaryanadil.com/pass-socket-io-to-express-routes-in-files/ Es la mejor opción?
     req.io = io;
     next();
 });
@@ -38,7 +38,7 @@ const io = new Server(server)
 io.on('connection', (socket) => {
     console.log(`Nueva conexion desde el id: ${socket.id}`);
 
-    socket.on('disconnect', (socket) => {
+    socket.on('disconnect', (_socket) => {
         console.log(`Cierre de conexion`);
     })
 })
